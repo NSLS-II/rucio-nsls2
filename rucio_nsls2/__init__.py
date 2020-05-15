@@ -6,16 +6,25 @@ from rucio.client.replicaclient import ReplicaClient
 from rucio.client.ruleclient import RuleClient
 from rucio.common.utils import adler32
 from ._version import get_versions
-
+from area_detector_handlers import HDF5DatasetSliceHandlerPureNumpy
 
 __version__ = get_versions()['version']
 del get_versions
-
 
 rse='BLUESKY'
 scope='bluesky-nsls2'
 dataset='bluesky-sdcc',
 pfn='globus:///~/globus/'
+
+
+class HDF5DatasetSliceHandlerPureNumpyLazy(HDF5DatasetSliceHandlerPureNumpy):
+    def __init__(self, filename, frame_per_point=1):
+        self._fpp = frame_per_point
+        self._filename = filename
+        self._file = None
+        self._dataset = None
+        self._data_objects = {}
+
 
 
 def nsls2_to_sdcc(run, lifetime):
@@ -26,9 +35,10 @@ def nsls2_to_sdcc(run, lifetime):
 
 def _get_filenames(run):
     files = []
-    for name, doc in run.canonical(fill="no"):
-        if name == "resource":
-            files.extend(run.get_file_list(resource))
+    run.fillers['yes'].register_handler('AD_HDF5', HDF5DatasetSliceHandlerPureNumpyLazy, overwrite=True)
+    for name, doc in run.canonical(fill='no'):
+        if name == 'resource':
+            files.extend(run.get_file_list(doc))
     return files
 
 
