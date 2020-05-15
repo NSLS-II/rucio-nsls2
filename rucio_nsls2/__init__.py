@@ -12,19 +12,61 @@ __version__ = get_versions()['version']
 del get_versions
 
 
-def nsls2_to_sdcc(catalog, lifetime, handler_registry=None):
+rse='BLUESKY'
+scope='bluesky-nsls2'
+dataset='archive',
+pfn='globus:///~/globus/'
+
+
+def nsls2_to_sdcc(catalog, lifetime):
     for run in catalog:
-        files = get_file_names(run, handler_registry)
-        rucio_replication(files)
+        files = _get_filenames(run)
+        rucio_register(files)
 
 
-def _get_file_names(run, handler_registry):
-
-
-
-def _rucio_replication(files):
-a
-
+def _get_filenames(run):
+    # The following code is from databroker-pack
+    for name, doc in run.canonical(fill="no"):
+        if external == "fill":
+            name, doc = filler(name, doc)
+            # Omit Resource and Datum[Page] because the data was
+            # filled in place.
+            if name in EXTERNAL_RELATED_DOCS:
+                progress.update()
+                continue
+        elif name == "resource":
+            root = root_map.get(doc["root"], doc["root"])
+            unique_id = root_hash_func(doc["root"])
+            if external is None:
+                resource = doc.copy()
+                resource["root"] = root
+                files[(root, unique_id)].update(run.get_file_list(resource))
+            # Replace root with a unique ID before serialization.
+            # We are overriding the local variable name doc here
+            # (yuck!) so that serializer(name, doc) below works on
+            # all document types.
+            doc = doc.copy()
+            doc["root"] = unique_id                for name, doc in run.canonical(fill="no"):
+        if external == "fill":
+            name, doc = filler(name, doc)
+            # Omit Resource and Datum[Page] because the data was
+            # filled in place.
+            if name in EXTERNAL_RELATED_DOCS:
+                progress.update()
+                continue
+        elif name == "resource":
+            root = root_map.get(doc["root"], doc["root"])
+            unique_id = root_hash_func(doc["root"])
+            if external is None:
+                resource = doc.copy()
+                resource["root"] = root
+                files[(root, unique_id)].update(run.get_file_list(resource))
+            # Replace root with a unique ID before serialization.
+            # We are overriding the local variable name doc here
+            # (yuck!) so that serializer(name, doc) below works on
+            # all document types.
+            doc = doc.copy()
+                        doc["root"] = unique_id
 
 def rucio_register(self, filenames):
     files = []
