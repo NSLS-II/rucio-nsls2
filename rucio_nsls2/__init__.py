@@ -25,48 +25,12 @@ def nsls2_to_sdcc(catalog, lifetime):
 
 
 def _get_filenames(run):
-    # The following code is from databroker-pack
+    files = []
     for name, doc in run.canonical(fill="no"):
-        if external == "fill":
-            name, doc = filler(name, doc)
-            # Omit Resource and Datum[Page] because the data was
-            # filled in place.
-            if name in EXTERNAL_RELATED_DOCS:
-                progress.update()
-                continue
-        elif name == "resource":
-            root = root_map.get(doc["root"], doc["root"])
-            unique_id = root_hash_func(doc["root"])
-            if external is None:
-                resource = doc.copy()
-                resource["root"] = root
-                files[(root, unique_id)].update(run.get_file_list(resource))
-            # Replace root with a unique ID before serialization.
-            # We are overriding the local variable name doc here
-            # (yuck!) so that serializer(name, doc) below works on
-            # all document types.
-            doc = doc.copy()
-            doc["root"] = unique_id                for name, doc in run.canonical(fill="no"):
-        if external == "fill":
-            name, doc = filler(name, doc)
-            # Omit Resource and Datum[Page] because the data was
-            # filled in place.
-            if name in EXTERNAL_RELATED_DOCS:
-                progress.update()
-                continue
-        elif name == "resource":
-            root = root_map.get(doc["root"], doc["root"])
-            unique_id = root_hash_func(doc["root"])
-            if external is None:
-                resource = doc.copy()
-                resource["root"] = root
-                files[(root, unique_id)].update(run.get_file_list(resource))
-            # Replace root with a unique ID before serialization.
-            # We are overriding the local variable name doc here
-            # (yuck!) so that serializer(name, doc) below works on
-            # all document types.
-            doc = doc.copy()
-                        doc["root"] = unique_id
+        if name == "resource":
+            files.extend(run.get_file_list(resource))
+    return files
+
 
 def rucio_register(self, filenames):
     files = []
