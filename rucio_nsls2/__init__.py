@@ -74,7 +74,7 @@ def cache_runs(catalog, run_uids, lifetime):
 
 def cache_catalog(catalog, lifetime):
     """
-    Replicate the files for a catalog at SDCC.
+    Replicate all of the catalog's files at SDCC.
     """
     files = []
     for run_uid in list(catalog):
