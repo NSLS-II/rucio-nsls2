@@ -26,13 +26,6 @@ class HDF5DatasetSliceHandlerPureNumpyLazy(HDF5DatasetSliceHandlerPureNumpy):
         self._data_objects = {}
 
 
-
-def nsls2_to_sdcc(run, lifetime):
-    files = _get_filenames(run)
-    print(files)
-    #rucio_register(files)
-
-
 def _get_filenames(run):
     files = []
     run.fillers['yes'].register_handler('AD_HDF5', HDF5DatasetSliceHandlerPureNumpyLazy, overwrite=True)
@@ -42,7 +35,7 @@ def _get_filenames(run):
     return files
 
 
-def rucio_register(self, filenames):
+def _rucio_register(self, filenames):
     files = []
     dids = []
 
@@ -57,3 +50,21 @@ def rucio_register(self, filenames):
     replica_client.add_replicas(rse=self.rse, files=files)
     didclient = DIDClient()
     didclient.add_files_to_dataset(self.scope, self.dataset, files)
+
+
+def cache_runs(catalog, run_uids, lifetime):
+    files = []
+    for run_uid in run_uids:
+        run = catalog[run_uid]
+        files.extend(_get_filenames(run))
+    _rucio_register(files)
+
+
+def cache_catalog(catalog, lifetime):
+    files = []
+    for run_uid in list(catalog):
+        run = catalog[run_uid]
+        files.extend(_get_filenames(run))
+    _rucio_register(files)
+
+
