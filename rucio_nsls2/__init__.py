@@ -14,14 +14,14 @@ del get_versions
 
 rse='BLUESKY'
 scope='bluesky-nsls2'
-dataset='archive',
+dataset='bluesky-sdcc',
 pfn='globus:///~/globus/'
 
 
-def nsls2_to_sdcc(catalog, lifetime):
-    for run in catalog:
-        files = _get_filenames(run)
-        rucio_register(files)
+def nsls2_to_sdcc(run, lifetime):
+    files = _get_filenames(run)
+    print(files)
+    #rucio_register(files)
 
 
 def _get_filenames(run):
