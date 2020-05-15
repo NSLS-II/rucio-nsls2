@@ -18,6 +18,9 @@ pfn='globus:///~/globus/'
 
 
 class HDF5DatasetSliceHandlerPureNumpyLazy(HDF5DatasetSliceHandlerPureNumpy):
+    """
+    Override the init so that the open method is not called.
+    """
     def __init__(self, filename, frame_per_point=1):
         self._fpp = frame_per_point
         self._filename = filename
@@ -27,6 +30,9 @@ class HDF5DatasetSliceHandlerPureNumpyLazy(HDF5DatasetSliceHandlerPureNumpy):
 
 
 def _get_filenames(run):
+    """
+    Get the list of filenames for a run.
+    """
     files = []
     run.fillers['yes'].register_handler('AD_HDF5', HDF5DatasetSliceHandlerPureNumpyLazy, overwrite=True)
     for name, doc in run.canonical(fill='no'):
@@ -36,6 +42,9 @@ def _get_filenames(run):
 
 
 def _rucio_register(self, filenames):
+    """
+    Register the file in rucio for replication to SDCC.
+    """
     files = []
     dids = []
 
@@ -53,6 +62,9 @@ def _rucio_register(self, filenames):
 
 
 def cache_runs(catalog, run_uids, lifetime):
+    """
+    Replicate the files for the list of runs given at SDCC.
+    """
     files = []
     for run_uid in run_uids:
         run = catalog[run_uid]
@@ -61,6 +73,9 @@ def cache_runs(catalog, run_uids, lifetime):
 
 
 def cache_catalog(catalog, lifetime):
+    """
+    Replicate the files for a catalog at SDCC.
+    """
     files = []
     for run_uid in list(catalog):
         run = catalog[run_uid]
