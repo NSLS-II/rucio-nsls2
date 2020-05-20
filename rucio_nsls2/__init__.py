@@ -1,5 +1,6 @@
 import event_model
 import databroker.core
+import os
 
 from rucio.client.didclient import DIDClient
 from rucio.client.replicaclient import ReplicaClient
