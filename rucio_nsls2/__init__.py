@@ -16,7 +16,7 @@ del get_versions
 rse='NSLS2'
 scope='nsls2'
 dataset='bluesky-sdcc',
-pfn='globus:///~/globus/'
+pfn='globus://'
 
 
 class HDF5DatasetSliceHandlerPureNumpyLazy(HDF5DatasetSliceHandlerPureNumpy):
@@ -89,10 +89,10 @@ def _rucio_register(self, filenames):
 
     for filename in filenames:
         size = os.stat(str(filename)).st_size
-        adler = adler32(str(filename))
+        #adler = adler32(str(filename))
         files.append({'scope': self.scope, 'name': str(filename.parts[-1]),
-                      'bytes': size, 'adler32': adler,
-                      'pfn': self.pfn + str(filename.parts[-1])})
+                      'bytes': size, 'adler32': "unknown",
+                      'pfn': self.pfn + filename)})
 
     replica_client = ReplicaClient()
     replica_client.add_replicas(rse=self.rse, files=files)
