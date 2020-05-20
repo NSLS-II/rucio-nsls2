@@ -6,13 +6,14 @@ from rucio.client.replicaclient import ReplicaClient
 from rucio.client.ruleclient import RuleClient
 from rucio.common.utils import adler32
 from ._version import get_versions
-from area_detector_handlers import HDF5DatasetSliceHandlerPureNumpy
+from area_detector_handlers.handlers import HDF5DatasetSliceHandlerPureNumpy
 
 __version__ = get_versions()['version']
 del get_versions
 
-rse='BLUESKY'
-scope='bluesky-nsls2'
+
+rse='NSLS2'
+scope='nsls2'
 dataset='bluesky-sdcc',
 pfn='globus:///~/globus/'
 
