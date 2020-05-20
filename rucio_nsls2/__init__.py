@@ -63,8 +63,9 @@ def _get_file_list(run, resource):
             for datum in event_model.unpack_datum_page(page):
                 yield datum['datum_kwargs']
 
-    files.extend(handler.get_file_list(datum_kwarg_gen()))
+    files.extend([filename[len(root):] for filename in handler.get_file_list(datum_kwarg_gen())])
     return files
+
 
 def _get_filenames(run):
     """
@@ -74,7 +75,7 @@ def _get_filenames(run):
     run.fillers['yes'].register_handler('AD_HDF5', HDF5DatasetSliceHandlerPureNumpyLazy, overwrite=True)
     for name, doc in run.canonical(fill='no'):
         if name == 'resource':
-            files.extend(run.get_file_list(doc))
+            files.extend(_get_file_list(run, doc))
     return files
 
 
