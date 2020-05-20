@@ -30,6 +30,42 @@ class HDF5DatasetSliceHandlerPureNumpyLazy(HDF5DatasetSliceHandlerPureNumpy):
         self._data_objects = {}
 
 
+def _get_file_list(run, resource):
+    """
+    Fetch filepaths of external files associated with this Run.
+    This method is not defined on RemoteBlueskyRun because the filepaths
+    may not be meaningful on a remote machine.
+    This method should be considered experimental. It may be changed or
+    removed in a future release.
+    """
+    files = []
+    # TODO Once event_model.Filler has a get_handler method, use that.
+    try:
+        handler_class = run.fillers['yes'].handler_registry[resource['spec']]
+    except KeyError as err:
+        raise event_model.UndefinedAssetSpecification(
+            f"Resource document with uid {resource['uid']} "
+            f"refers to spec {resource['spec']!r} which is "
+            f"not defined in the Filler's "
+            f"handler registry.") from err
+    # Apply root_map.
+    resource_path = resource['resource_path']
+    root = resource.get('root', '')
+    root = run.fillers['yes'].root_map.get(root, root)
+    if root:
+        resource_path = os.path.join(root, resource_path)
+
+    handler = handler_class(resource_path,
+                            **resource['resource_kwargs'])
+
+    def datum_kwarg_gen():
+        for page in run._get_datum_pages(resource['uid']):
+            for datum in event_model.unpack_datum_page(page):
+                yield datum['datum_kwargs']
+
+    files.extend(handler.get_file_list(datum_kwarg_gen()))
+    return files
+
 def _get_filenames(run):
     """
     Get the list of filenames for a run.
