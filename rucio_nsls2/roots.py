@@ -1,5 +1,5 @@
 root_map = {'amx': {'/GPFS/CENTRAL': '/nsls2/xf17id1'},
-            'bmm': {'/home/xspress3': '/nsls2/xf06bm/xspress3'},
+            'bmm': None,
             'chx': {'/XF11ID': '/nsls2/xf11id1',
                     '/XF11ID/data': '/nsls2/xf11id1/data',
                     '/nsls2/xf11id': '/nsls2/xf11id1',
@@ -17,11 +17,17 @@ root_map = {'amx': {'/GPFS/CENTRAL': '/nsls2/xf17id1'},
                     '/NSLS2/xf18id1/DATA/detA1': '/nsls2/xf18id1/data/detA1'}.
             'ios': {'/GPFS/xf23id/xf23id1': '/nsls2/xf23id1/xf23id1',
                     '/GPFS/xf23id/xf23id2': '/nsls2/xf23id1/xf23id2'},
-            'isr': {'/GPFS/xf04id': '/nsls2/xf04id1'}, #/GPFS/xf04id is a symlink.
-            'iss': {'/GPFS/xf08id/': '/nsls2/xf08id', #/GPFS/xf08id is a symlink.
+            'isr': {'/GPFS/xf04id': '/nsls2/xf04id1'}, #/GPFS/xf04id -> /nsls2/xf04id1
+            'iss': {'/GPFS/xf08id/': '/nsls2/xf08id', #/GPFS/xf08id -> /nsls2/xf08id
                     '/nsls2/xf08id': '/nsls2/xf08id'
                     '/nsls2/xf08id/data': '/nsls2/xf08id/data'},
-            'ixs': {'':''},
+            'ixs': None,
+            'jpls': None,
+            'lix': {'/GPFS/CENTRAL/XF16ID1/test/': None,
+                    '/GPFS/xf16id': '/nsls2/xf16id1',                     #/GPFS/xf16id -> /nsls2/xf16id1
+                    '/GPFS/xf16ide/exp_path/': '/nsls2/xf16id1/exp_path',
+                    '/tmp/': None},
+            'pdf': {
 
 
 
