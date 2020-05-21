@@ -31,7 +31,7 @@ class HDF5DatasetSliceHandlerPureNumpyLazy(HDF5DatasetSliceHandlerPureNumpy):
         self._data_objects = {}
 
 
-def _get_file_list(run, resource):
+def _get_file_list(beamline_name, run, resource):
     """
     Fetch filepaths of external files associated with this Run.
     This method is not defined on RemoteBlueskyRun because the filepaths
@@ -53,9 +53,10 @@ def _get_file_list(run, resource):
     resource_path = resource['resource_path']
     root = resource.get('root', '')
     root = run.fillers['yes'].root_map.get(root, root)
+    new_root = {'csx' : "/xf23id1/xf23id1"}
     if root:
         resource_path = os.path.join(root, resource_path)
-
+    breakpoint()
     handler = handler_class(resource_path,
                             **resource['resource_kwargs'])
 
@@ -64,11 +65,12 @@ def _get_file_list(run, resource):
             for datum in event_model.unpack_datum_page(page):
                 yield datum['datum_kwargs']
 
-    files.extend([filename[len(root):] for filename in handler.get_file_list(datum_kwarg_gen())])
+#    files.extend([filename[len(root):] for filename in handler.get_file_list(datum_kwarg_gen())])
+    files.extend(handler.get_file_list(datum_kwarg_gen()))
     return files
 
 
-def _get_filenames(run):
+def _get_filenames(beamline_name, run):
     """
     Get the list of filenames for a run.
     """
@@ -76,7 +78,7 @@ def _get_filenames(run):
     run.fillers['yes'].register_handler('AD_HDF5', HDF5DatasetSliceHandlerPureNumpyLazy, overwrite=True)
     for name, doc in run.canonical(fill='no'):
         if name == 'resource':
-            files.extend(_get_file_list(run, doc))
+            files.extend(_get_file_list(beamline_name, run, doc))
     return files
 
 

@@ -1,3 +1,33 @@
+root_map = {'amx': {'/GPFS/CENTRAL': '/nsls2/xf17id1'},
+            'bmm': {'/home/xspress3': '/nsls2/xf06bm/xspress3'},
+            'chx': {'/XF11ID': '/nsls2/xf11id1',
+                    '/XF11ID/data': '/nsls2/xf11id1/data',
+                    '/nsls2/xf11id': '/nsls2/xf11id1',
+                    '/nsls2/xf11id1': '/nsls2/xf11id1',
+                    '/nsls2/xf11id1/data': '/nsls2/xf11id1/data'},
+            'cms': {'/nsls2/xf11bm': '/nsls2/xf11bm',
+                    '/GPFS/xf11bm': '/nsls2/xf11bm'},
+            'csx': {'/GPFS/xf23id/xf23id1': '/nsls2/xf23id1/xf23id1',
+                    '/GPFS/xf23id/xf23id2': '/nsls2/xf23id1/xf23id2'},
+            'esm': {'/GPFS/xf23id':	'/nsls2/xf23id1',
+                    '/direct/XF21ID1': '/nsls2/xf23id1'},
+            'fmx': {'/GPFS/CENTRAL': '/nsls2/xf17id2'},
+            'fxi': {'/NSLS2/xf18id1/DATA': '/nsls2/xf18id1/data',
+                    '/NSLS2/xf18id1/DATA/Andor': '/nsls2/xf18id1/data/Andor',
+                    '/NSLS2/xf18id1/DATA/detA1': '/nsls2/xf18id1/data/detA1'}.
+            'ios': {'/GPFS/xf23id/xf23id1': '/nsls2/xf23id1/xf23id1',
+                    '/GPFS/xf23id/xf23id2': '/nsls2/xf23id1/xf23id2'},
+            'isr': {'/GPFS/xf04id': '/nsls2/xf04id1'}, #/GPFS/xf04id is a symlink.
+            'iss': {'/GPFS/xf08id/': '/nsls2/xf08id', #/GPFS/xf08id is a symlink.
+                    '/nsls2/xf08id': '/nsls2/xf08id'
+                    '/nsls2/xf08id/data': '/nsls2/xf08id/data'},
+            'ixs': {'':''},
+
+
+
+
+
+
 roots = {'amx': ['', '/tmp', '/tmp/'],
  'bmm': ['/home/xspress3'],
  'chx': ['',
