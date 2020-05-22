@@ -94,7 +94,7 @@ def _rucio_register(filenames):
         #adler = adler32(str(filename))
         files.append({'scope': scope, 'name': str(filename.parts[-1]),
                       'bytes': 1000, 'adler32': "unknown",
-                      'pfn': pfn + filename)})
+                      'pfn': pfn + filename})
 
     replica_client = ReplicaClient()
     replica_client.add_replicas(rse=rse, files=files)
