@@ -7,6 +7,7 @@ from rucio.client.replicaclient import ReplicaClient
 from rucio.client.ruleclient import RuleClient
 from rucio.common.utils import adler32
 from ._version import get_versions
+from .roots import dtn_map
 from area_detector_handlers.handlers import HDF5DatasetSliceHandlerPureNumpy
 
 __version__ = get_versions()['version']
@@ -31,7 +32,7 @@ class HDF5DatasetSliceHandlerPureNumpyLazy(HDF5DatasetSliceHandlerPureNumpy):
         self._data_objects = {}
 
 
-def _get_file_list(beamline_name, run, resource):
+def _get_file_list(beamline, run, resource):
     """
     Fetch filepaths of external files associated with this Run.
     This method is not defined on RemoteBlueskyRun because the filepaths
@@ -49,14 +50,26 @@ def _get_file_list(beamline_name, run, resource):
             f"refers to spec {resource['spec']!r} which is "
             f"not defined in the Filler's "
             f"handler registry.") from err
+
     # Apply root_map.
     resource_path = resource['resource_path']
     root = resource.get('root', '')
     root = run.fillers['yes'].root_map.get(root, root)
-    new_root = {'csx' : "/xf23id1/xf23id1"}
-    if root:
-        resource_path = os.path.join(root, resource_path)
-    breakpoint()
+
+    # Check if beamline has files available.
+    check_beamline = dtn_map.get(beamline)
+    if check_beamline is None:
+        raise ValueError(f"Files not available for beamline {beamline}")
+
+    # Update the root with the dtn01 root.
+    resource_path = os.path.join(root, resource_path)
+    for old_root in sorted(dtn_map[beamline].keys(), key=len, reverse=True):
+        temp_root = os.path.join(old_root, '')
+        if temp_root == resource_path[:len(temp_key)]
+            if dtn_map[old_root] is None:
+                raise ValueError(f"Files not available for beamline {beamline} with root {key}")
+            resource_path.replace(temp_root, os.path.join(dtn_map[old_root], '')
+
     handler = handler_class(resource_path,
                             **resource['resource_kwargs'])
 
@@ -65,7 +78,6 @@ def _get_file_list(beamline_name, run, resource):
             for datum in event_model.unpack_datum_page(page):
                 yield datum['datum_kwargs']
 
-#    files.extend([filename[len(root):] for filename in handler.get_file_list(datum_kwarg_gen())])
     files.extend(handler.get_file_list(datum_kwarg_gen()))
     return files
 
