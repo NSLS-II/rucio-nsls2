@@ -66,9 +66,10 @@ def _get_file_list(beamline, run, resource):
     for old_root in sorted(dtn_map[beamline].keys(), key=len, reverse=True):
         temp_root = os.path.join(old_root, '')
         if temp_root == resource_path[:len(temp_key)]
-            if dtn_map[old_root] is None:
+            # dtn_map[old_root] is None if files are not availble on dtn01.
+            if dtn_map[beamline][old_root] is None:
                 raise ValueError(f"Files not available for beamline {beamline} with root {key}")
-            resource_path.replace(temp_root, os.path.join(dtn_map[old_root], '')
+            resource_path.replace(temp_root, os.path.join(dtn_map[beamline][old_root], '')
 
     handler = handler_class(resource_path,
                             **resource['resource_kwargs'])
