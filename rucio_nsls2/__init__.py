@@ -88,10 +88,13 @@ def _get_filenames(beamline_name, run):
     Get the list of filenames for a run.
     """
     files = []
+    resource_count = 0
     run.fillers['yes'].register_handler('AD_HDF5', HDF5DatasetSliceHandlerPureNumpyLazy, overwrite=True)
     for name, doc in run.canonical(fill='no'):
         if name == 'resource':
             files.extend(_get_file_list(beamline_name, run, doc))
+            resource_count += 1
+    print(resource_count, files)
     return files
 
 
