@@ -1,13 +1,16 @@
 import event_model
 import databroker.core
 import os
+import rucio.common.exception
 
 from rucio.client.didclient import DIDClient
+from rucio.db.sqla.constants import DIDType
 from rucio.client.replicaclient import ReplicaClient
 from rucio.client.ruleclient import RuleClient
 from rucio.common.utils import adler32
 from ._version import get_versions
 from .roots import dtn_map
+from .roots import root_map
 from area_detector_handlers.handlers import HDF5DatasetSliceHandlerPureNumpy
 
 __version__ = get_versions()['version']
@@ -78,7 +81,7 @@ def _get_file_list(beamline, run, resource):
             for datum in event_model.unpack_datum_page(page):
                 yield datum['datum_kwargs']
 
-    files.extend(handler.get_file_list(datum_kwarg_gen()))
+    files.extend([(root_map[root], filename) for filename in handler.get_file_list(datum_kwarg_gen())])
     return files
 
 
@@ -97,45 +100,65 @@ def _get_filenames(beamline_name, run):
     return files
 
 
-def _rucio_register(filenames):
+def _rucio_register(beamline, uid, filenames):
     """
     Register the file in rucio for replication to SDCC.
     """
-    files = []
-    dids = []
+    scope = beamline
+    container = uid
 
-    for filename in filenames:
+    for root, filename in filenames:
         #size = os.stat(str(filename)).st_size
         #adler = adler32(str(filename))
-        files.append({'scope': scope, 'name': str(filename.parts[-1]),
-                      'bytes': 1000, 'adler32': "unknown",
-                      'pfn': pfn + filename})
+        files = [{'scope': scope,
+                  'name': str(filename.parts[-1]),
+                  'bytes': 1000,
+                  'adler32': "unknown",
+                  'pfn': pfn + filename})]
 
-    replica_client = ReplicaClient()
-    replica_client.add_replicas(rse=rse, files=files)
-    didclient = DIDClient()
-    didclient.add_files_to_dataset(scope, dataset, files)
+        dataset = root
+
+        replica_client = ReplicaClient()
+        replica_client.add_replicas(rse=rse, files=files)
+        didclient = DIDClient()
+
+        # Create a new container if it doesn't exist.
+        try:
+            didclient.add_did(scope=scope, name=uid, type=DIDType.CONTAINER)
+        except rucio.common.exception.DataIdentifierAlreadyExists:
+            pass
+
+        # Create a new dataset if it doesn't exist.
+        try:
+            didclient.add_did(scope=scope, name=dataset, type=DIDType.DATASET)
+        except rucio.common.exception.DataIdentifierAlreadyExists:
+            pass
+
+        didclient.add_files_to_dataset(scope, dataset, files)
+        attachment = {'scope': scope, 'name':uid,
+                      'dids':[{'scope': scope, 'name': dataset}]}
+        didclient.add_datasets_to_containers([attachment])
 
 
-def cache_runs(catalog, run_uids, lifetime):
+def cache_runs(catalog, run_uids):
     """
     Replicate the files for the list of runs given at SDCC.
     """
-    files = []
+    beamline = catalog.name
     for run_uid in run_uids:
         run = catalog[run_uid]
-        files.extend(_get_filenames(run))
-    _rucio_register(files)
+        files = _get_filenames(run)
+        _rucio_register(beamline, run_uid, files)
 
 
-def cache_catalog(catalog, lifetime):
+def cache_catalog(catalog):
     """
     Replicate all of the catalog's files at SDCC.
     """
-    files = []
+    beamline = catalog.name
     for run_uid in list(catalog):
         run = catalog[run_uid]
-        files.extend(_get_filenames(run))
-    _rucio_register(files)
+        files = _get_filenames(run)
+        _rucio_register(beamline, run_uid, files)
 
 
