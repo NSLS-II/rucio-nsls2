@@ -4,7 +4,7 @@ import os
 import rucio.common.exception
 
 from rucio.client.didclient import DIDClient
-from rucio.db.sqla.constants import DIDType
+from rucio.client.scopeclient import ScopeClient
 from rucio.client.replicaclient import ReplicaClient
 from rucio.client.ruleclient import RuleClient
 from rucio.common.utils import adler32
@@ -68,11 +68,12 @@ def _get_file_list(beamline, run, resource):
     resource_path = os.path.join(root, resource_path)
     for old_root in sorted(dtn_map[beamline].keys(), key=len, reverse=True):
         temp_root = os.path.join(old_root, '')
-        if temp_root == resource_path[:len(temp_key)]:
+        if temp_root == resource_path[:len(temp_root)]:
             # dtn_map[old_root] is None if files are not availble on dtn01.
             if dtn_map[beamline][old_root] is None:
                 raise ValueError(f"Files not available for beamline {beamline} with root {key}")
-            resource_path.replace(temp_root, os.path.join(dtn_map[beamline][old_root], ''))
+            resource_path = resource_path.replace(temp_root, os.path.join(dtn_map[beamline][old_root], ''))
+            break
 
     handler = handler_class(resource_path, **resource['resource_kwargs'])
 
@@ -81,7 +82,8 @@ def _get_file_list(beamline, run, resource):
             for datum in event_model.unpack_datum_page(page):
                 yield datum['datum_kwargs']
 
-    files.extend([(root_map[root], filename) for filename in handler.get_file_list(datum_kwarg_gen())])
+    files.extend([(root_map[beamline][root], filename) 
+		  for filename in handler.get_file_list(datum_kwarg_gen())])
     return files
 
 
@@ -96,7 +98,7 @@ def _get_filenames(beamline_name, run):
         if name == 'resource':
             files.extend(_get_file_list(beamline_name, run, doc))
             resource_count += 1
-    print(resource_count, files)
+    print(run, resource_count, files)
     return files
 
 
@@ -107,58 +109,84 @@ def _rucio_register(beamline, uid, filenames):
     scope = beamline
     container = uid
 
+    replica_client = ReplicaClient()
+    didclient = DIDClient()
+    scopeclient = ScopeClient()
+    ruleclient = RuleClient()
+
     for root, filename in filenames:
         #size = os.stat(str(filename)).st_size
         #adler = adler32(str(filename))
         files = [{'scope': scope,
-                  'name': str(filename.parts[-1]),
+                  'name': filename.split('/')[-1],
                   'bytes': 1000,
-                  'adler32': "unknown",
-                  'pfn': pfn + filename})]
-
-        dataset = root
-
-        replica_client = ReplicaClient()
+                  #'adler32': "unknown",
+                  'pfn': pfn + filename}]
+        dataset = root.replace('/', '.')[1:]
+        try:
+            scopeclient.add_scope(account='nsls2data', scope=scope)
+        except rucio.common.exception.Duplicate:
+            pass
+       
         replica_client.add_replicas(rse=rse, files=files)
-        didclient = DIDClient()
 
         # Create a new container if it doesn't exist.
         try:
-            didclient.add_did(scope=scope, name=uid, type=DIDType.CONTAINER)
+            didclient.add_did(scope=scope, name=uid, type='container')
         except rucio.common.exception.DataIdentifierAlreadyExists:
+            pass
+
+        # Create a replication rule.
+        try:
+            dids = [{'scope': scope, 'name': container}]
+            ruleclient.add_replication_rule(dids=dids, 
+                                            copies=1, 
+                                            rse_expression='SDCC', 
+			                    lifetime=86400,  # Seconds
+                                            account='nsls2data', 
+			                    source_replica_expression='NSLS2', 
+                                            purge_replicas=True, 
+			                    comment='purge_replicas in 24 hours')
+        except rucio.common.exception.DuplicateRule:
             pass
 
         # Create a new dataset if it doesn't exist.
         try:
-            didclient.add_did(scope=scope, name=dataset, type=DIDType.DATASET)
+            didclient.add_did(scope=scope, name=dataset, type='dataset')
         except rucio.common.exception.DataIdentifierAlreadyExists:
             pass
 
-        didclient.add_files_to_dataset(scope, dataset, files)
         attachment = {'scope': scope, 'name':uid,
                       'dids':[{'scope': scope, 'name': dataset}]}
-        didclient.add_datasets_to_containers([attachment])
+        
+        try:
+            didclient.add_files_to_dataset(scope, dataset, files)
+        except rucio.common.exception.FileAlreadyExists:
+            pass
+
+        try:
+            didclient.add_datasets_to_containers([attachment])
+        except rucio.common.exception.DuplicateContent:
+            pass
 
 
-def cache_runs(catalog, run_uids):
+def get_runs(catalog, beamline, run_uids):
     """
     Replicate the files for the list of runs given at SDCC.
     """
-    beamline = catalog.name
     for run_uid in run_uids:
         run = catalog[run_uid]
-        files = _get_filenames(run)
+        files = _get_filenames(beamline, run)
         _rucio_register(beamline, run_uid, files)
 
 
-def cache_catalog(catalog):
+def get_catalog(catalog, beamline):
     """
     Replicate all of the catalog's files at SDCC.
     """
-    beamline = catalog.name
     for run_uid in list(catalog):
         run = catalog[run_uid]
-        files = _get_filenames(run)
+        files = _get_filenames(beamline, run)
         _rucio_register(beamline, run_uid, files)
 
 
