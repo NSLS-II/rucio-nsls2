@@ -65,6 +65,7 @@ def _get_file_list(beamline, run, resource):
         raise ValueError(f"Files not available for beamline {beamline}")
 
     # Update the root with the dtn01 root.
+    ending = ''
     resource_path = os.path.join(root, resource_path)
     for old_root in sorted(dtn_map[beamline].keys(), key=len, reverse=True):
         temp_root = os.path.join(old_root, '')
@@ -72,6 +73,7 @@ def _get_file_list(beamline, run, resource):
             # dtn_map[old_root] is None if files are not availble on dtn01.
             if dtn_map[beamline][old_root] is None:
                 raise ValueError(f"Files not available for beamline {beamline} with root {key}")
+            ending = resource_path[len(temp_root):]
             resource_path = resource_path.replace(temp_root, os.path.join(dtn_map[beamline][old_root], ''))
             break
 
@@ -82,7 +84,7 @@ def _get_file_list(beamline, run, resource):
             for datum in event_model.unpack_datum_page(page):
                 yield datum['datum_kwargs']
 
-    files.extend([(root_map[beamline][root], filename) 
+    files.extend([(root_map[beamline][root], ending, filename) 
 		  for filename in handler.get_file_list(datum_kwarg_gen())])
     return files
 
@@ -114,7 +116,7 @@ def _rucio_register(beamline, uid, filenames):
     scopeclient = ScopeClient()
     ruleclient = RuleClient()
 
-    for root, filename in filenames:
+    for root, ending, filename in filenames:
         #size = os.stat(str(filename)).st_size
         #adler = adler32(str(filename))
         files = [{'scope': scope,
@@ -122,7 +124,11 @@ def _rucio_register(beamline, uid, filenames):
                   'bytes': 1000,
                   #'adler32': "unknown",
                   'pfn': pfn + filename}]
-        dataset = root.replace('/', '.')[1:]
+
+        dataset = os.path.join(root, ending)
+        dataset = '.'.join(dataset.split('/')[1:-1])
+        print("DATASET", dataset)
+        breakpoint()
         try:
             scopeclient.add_scope(account='nsls2data', scope=scope)
         except rucio.common.exception.Duplicate:
