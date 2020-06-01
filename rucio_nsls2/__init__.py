@@ -193,6 +193,7 @@ def get_catalog(catalog, beamline):
     for run_uid in list(catalog):
         run = catalog[run_uid]
         files = _get_filenames(beamline, run)
-        _rucio_register(beamline, run_uid, files)
+        print(files)
+        #_rucio_register(beamline, run_uid, files)
 
 
